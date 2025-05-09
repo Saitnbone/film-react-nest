@@ -1,71 +1,45 @@
 import { Injectable } from '@nestjs/common';
-import { FilmRepository } from '../repository/film.repository';
-
-export interface IFilm {
-  id: string;
-  rating: number;
-  director: string;
-  tags: string[];
-  title: string;
-  about: string;
-  description: string;
-  image: string;
-  cover: string;
-}
-
-export interface ISession {
-  id: string;
-  film: string;
-  daytime: string;
-  day: string;
-  time: string;
-  hall: string;
-  rows: number;
-  seats: number;
-  price: number;
-  taken: string[];
-}
+import { InjectRepository } from '@nestjs/typeorm';
+import { Films } from './entities/film.entity';
+import { Schedules } from '../order/entities/schedule.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
-export class FilmService {
-  constructor(private readonly filmRepository: FilmRepository) {}
+export class FilmsService {
+  constructor(
+    @InjectRepository(Films)
+    private filmRepository: Repository<Films>,
+    @InjectRepository(Schedules)
+    private scheduleRepository: Repository<Schedules>,
+  ) {}
+  async getAllFilms() {
+    const data = await this.filmRepository.find();
 
-  async findAll(): Promise<{ items: IFilm[] }> {
-    const films = await this.filmRepository.find();
-
-    const transformedFilms = films.map((film) => ({
-      id: film.id,
-      rating: film.rating,
-      director: film.director,
-      tags: film.tags,
-      title: film.title,
-      about: film.about,
-      description: film.description,
-      image: film.image,
-      cover: film.cover,
+    const films = data.map((film) => ({
+      ...film,
+      description: film.about,
     }));
 
-    return { items: transformedFilms };
+    return {
+      total: films.length,
+      items: films,
+    };
   }
 
-  async findScheduleById(id: string): Promise<{ items: ISession[] }> {
-    const schedule = await this.filmRepository.findScheduleByFilmId(id);
-    if (!schedule) {
-      return { items: [] };
-    }
+  async findFilm(id: string) {
+    const data = await this.scheduleRepository.find({
+      where: { filmId: id },
+    });
 
-    const stransformedSchedule = schedule.map((session) => ({
-      id: session.id,
-      film: id,
-      daytime: session.daytime,
-      day: session.daytime,
-      time: session.daytime,
-      hall: session.hall.toString(),
-      rows: session.rows,
-      seats: session.seats,
-      price: session.price,
-      taken: session.taken,
-    }));
-    return { items: stransformedSchedule };
+    const schedule = data.map((item) => {
+      return {
+        ...item,
+        taken: item.taken.split(', '),
+      };
+    });
+    return {
+      total: schedule.length,
+      items: schedule,
+    };
   }
 }

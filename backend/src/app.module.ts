@@ -1,14 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { join } from 'path';
-import * as mongoose from 'mongoose';
-import { configProvider } from './app.config.provider';
-import { FilmController } from './films/film.controller';
-import { OrderController } from './order/order.controller';
-import { OrderService } from './order/order.service';
-import { FilmService } from './films/film.service';
-import { FilmRepository } from './repository/film.repository';
+import { FilmsModule } from './films/films.module';
+import { OrderModule } from './order/order.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Schedules } from './order/entities/schedule.entity';
+import { Films } from './films/entities/film.entity';
 
 @Module({
   imports: [
@@ -16,23 +14,27 @@ import { FilmRepository } from './repository/film.repository';
       isGlobal: true,
       cache: true,
     }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get('DATABASE_HOST'),
+        port: configService.get('DATABASE_PORT'),
+        username: configService.get('DATABASE_USERNAME'),
+        password: configService.get('DATABASE_PASSWORD'),
+        database: configService.get('DATABASE_NAME'),
+        schema: configService.get('DATABASE_SCHEMA'),
+        entities: [Films, Schedules],
+        synchronize: false,
+      }),
+    }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public', 'content', 'afisha'),
+      rootPath: join(__dirname, '..', '..', 'public', 'content', 'afisha'),
       serveRoot: '/content/afisha',
     }),
+    FilmsModule,
+    OrderModule,
   ],
-  controllers: [FilmController, OrderController],
-  providers: [configProvider, OrderService, FilmService, FilmRepository],
 })
-export class AppModule {
-  constructor() {
-    mongoose
-      .connect(process.env.DATABASE_URL)
-      .then(() => {
-        console.log('MongoDB подключен');
-      })
-      .catch((err) => {
-        console.error('Ошибка подключения к MongoDB', err);
-      });
-  }
-}
+export class AppModule {}
