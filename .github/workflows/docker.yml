@@ -39,4 +39,4 @@ jobs:
         with:
           context: ./frontend
           push: true
-          tags: ghcr.io/$saitnbone/film-frontend:latest
+          tags: ghcr.io/saitnbone/film-frontend:latest
