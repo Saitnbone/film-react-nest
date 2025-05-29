@@ -57,7 +57,7 @@ services:
       PGADMIN_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_PASSWORD: ${PGADMIN_PASSWORD}
     ports:
-      - "8080:80"
+      - "${PGADMIN_PORT}:${PGADMIN_DOCKER_PORT}"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:
