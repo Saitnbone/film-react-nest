@@ -1,5 +1,7 @@
 # FILM!
 
+Ссылка на проект - http://film-react-nest.nomorepartiessbs.ru
+
 ## Установка
 
 ### MongoDB

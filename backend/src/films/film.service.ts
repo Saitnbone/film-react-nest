@@ -34,7 +34,7 @@ export class FilmsService {
     const schedule = data.map((item) => {
       return {
         ...item,
-        taken: item.taken.split(', '),
+        taken: item.taken.split(','),
       };
     });
     return {
